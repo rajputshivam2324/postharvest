@@ -1,0 +1,50 @@
+{
+ "note": "Credits for the photographs in this folder: photos.mjs credits prints the footer block for the ones the pages use.",
+ "photos": [
+  {
+   "file": "photo-f184771770.webp",
+   "files": [
+    "photo-f184771770-500.webp",
+    "photo-f184771770-960.webp",
+    "photo-f184771770.webp"
+   ],
+   "id": "f184771770",
+   "alt": "APHIS-Aircraft and Equipment Operations (AEO), Aircraft Operations and Warehouse (20230622-CDP-APHIS-1121)",
+   "by": "USDAgov",
+   "licence": "Public domain",
+   "licenceUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+   "page": "https://commons.wikimedia.org/wiki/File:APHIS-Aircraft_and_Equipment_Operations_(AEO),_Aircraft_Operations_and_Warehouse_(20230622-CDP-APHIS-1121).jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f88984490.webp",
+   "files": [
+    "photo-f88984490-500.webp",
+    "photo-f88984490-960.webp",
+    "photo-f88984490.webp"
+   ],
+   "id": "f88984490",
+   "alt": "Tomatos ready for dispatch",
+   "by": "Phadke09",
+   "licence": "CC BY-SA 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Tomatos_ready_for_dispatch.jpg",
+   "source": "Wikimedia Commons"
+  },
+  {
+   "file": "photo-f133818202.webp",
+   "files": [
+    "photo-f133818202-500.webp",
+    "photo-f133818202-960.webp",
+    "photo-f133818202.webp"
+   ],
+   "id": "f133818202",
+   "alt": "Ripe tomatoes",
+   "by": "Geems04",
+   "licence": "CC BY-SA 4.0",
+   "licenceUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+   "page": "https://commons.wikimedia.org/wiki/File:Ripe_tomatoes.jpg",
+   "source": "Wikimedia Commons"
+  }
+ ]
+}

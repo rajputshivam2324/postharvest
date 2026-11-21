@@ -1,0 +1,48 @@
+[project]
+name = "harvest-monitor-backend"
+version = "0.1.0"
+description = "Evidence-based post-harvest monitoring API"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "fastapi>=0.141,<1",
+  "uvicorn[standard]>=0.34,<1",
+  "pydantic-settings>=2.8,<3",
+  "sqlalchemy>=2.0.38,<2.1",
+  "alembic>=1.15,<2",
+  "psycopg[binary]>=3.2,<4",
+  "argon2-cffi>=25.1,<26",
+  "PyJWT>=2.10,<3",
+  "google-genai==2.9.0",
+  "langgraph==1.2.0",
+  "pgvector==0.5.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.3,<10", "httpx>=0.28,<1", "ruff>=0.11,<1", "mypy>=1.15,<2"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".."]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["B008"]
+
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+exclude = ["alembic/"]

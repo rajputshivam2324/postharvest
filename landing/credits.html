@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en" data-type="software" data-radius="soft" data-ground="sky" data-buttons="tonal" data-motion>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Harvest: photograph credits</title>
+<meta name="description" content="The photographers, licences and source pages of the photographs on the Harvest website.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Harvest: produce monitoring for warehouses and farms">
+<meta property="og:description" content="A sensor with each batch reports about every five minutes. Harvest ranks batches by risk and alerts staff.">
+<meta property="og:image" content="share.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#ffffff">
+<!-- <link rel="canonical" href="https://[the client's domain]/"> until the domain is known -->
+<meta name="site-kind" content="software">
+<meta name="page-type" content="software">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400..700&family=Funnel+Sans:wght@400..600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/system.css">
+<link rel="stylesheet" href="assets/ui/cards.css">
+<link rel="stylesheet" href="assets/motion/motion.css">
+<link rel="stylesheet" href="assets/backgrounds/backgrounds.css">
+<link rel="stylesheet" href="assets/layout/layout.css">
+<link rel="stylesheet" href="assets/icons/icon.css">
+<style>
+:root {
+  --p-bg: #ffffff; --p-surface: #f4f4f4; --p-ink: #111111; --p-muted: #6b6b6b;
+  --p-accent: #1a4be0; --p-accent-ink: #ffffff; --p-action: #1a4be0; --p-action-ink: #ffffff;
+  --p-inv-bg: #111111; --p-inv-surface: #1e1e1e; --p-inv-ink: #ffffff; --p-inv-muted: #9a9a9a;
+  --p-inv-accent: #ffffff; --p-inv-accent-ink: #111111; --p-inv-action: #ffffff; --p-inv-action-ink: #111111;
+  --font-display: "Funnel Display", system-ui, sans-serif;
+  --font-text: "Funnel Sans", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --display-weight: 400;
+  --display-tracking: -0.03em;
+  --display-tracking-xl: -0.04em;
+  --ly-scale: 0.98;
+}
+</style>
+<link rel="stylesheet" href="assets/ui/base.css">
+<link rel="stylesheet" href="assets/ui/chat/fragment.css">
+<script>document.documentElement.classList.add('m-enter');setTimeout(()=>document.documentElement.classList.add('m-enter-done'),700)</script>
+<script src="assets/backgrounds/backgrounds.js"></script>
+<script>document.documentElement.classList.add('mo-js');setTimeout(()=>document.documentElement.classList.add('mo-safe'),2500)</script>
+<link rel="modulepreload" href="assets/moments/moments.js">
+<link rel="modulepreload" href="assets/moments/lib.js">
+<link rel="modulepreload" href="assets/moments/liquid-type/moment.js">
+<link rel="modulepreload" href="assets/moments/marquee-row/moment.js">
+<style>
+/* product mocks: the page's own UI, drawn in HTML. Risk colours (green, amber, red, grey) mean risk and nothing else. */
+.hv { --hv-bg: #fff; --hv-ink: #16181a; --hv-mut: #565b61; --hv-line: rgb(0 0 0 / .09); --hv-fill: rgb(0 0 0 / .045); --hv-on: #eef2fd; --hv-acc: #1a4be0;
+  --rk-low-bg: #e4f3ea; --rk-low-fg: #135c37; --rk-el-bg: #fdefd6; --rk-el-fg: #7a4900; --rk-hi-bg: #fbe3df; --rk-hi-fg: #9c2217; --rk-in-bg: #ececec; --rk-in-fg: #44484c;
+  background: var(--hv-bg); color: var(--hv-ink); font: 400 14px/1.4 var(--font-text); text-align: left; }
+.hv--dark { --hv-bg: var(--bg); --hv-ink: #eceef0; --hv-mut: #a6abb0; --hv-line: rgb(255 255 255 / .1); --hv-fill: rgb(255 255 255 / .05); --hv-on: #23283a; --hv-acc: #86a3ff;
+  --rk-low-bg: #1d3a2a; --rk-low-fg: #8fe0b0; --rk-el-bg: #43330f; --rk-el-fg: #f3c56b; --rk-hi-bg: #4a1f1b; --rk-hi-fg: #ffa59b; --rk-in-bg: #2c2e32; --rk-in-fg: #c4c8cc; }
+.hv-win { border-radius: 12px; overflow: hidden; box-shadow: 0 0 0 1px rgb(0 0 0 / .07), 0 24px 60px -28px rgb(0 0 0 / .45); }
+.hv-bar { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 14px; border-bottom: 1px solid var(--hv-line); font-size: 13px; color: var(--hv-mut); }
+.hv-bar > span:first-child { display: flex; gap: 6px; } .hv-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--hv-line); }
+.hv-bar b { font-weight: 500; color: var(--hv-ink); }
+.hv-main { padding: 16px 18px; display: grid; align-content: start; gap: 12px; min-width: 0; }
+.hv-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.hv-head b { font: 500 16px/1.2 var(--font-text); letter-spacing: -0.01em; }
+.hv-tabs { display: flex; flex-wrap: wrap; gap: 4px; font-size: 13px; }
+.hv-tabs span { padding: 3px 10px; border-radius: 99px; color: var(--hv-mut); }
+.hv-tabs span.is-on { background: var(--hv-fill); color: var(--hv-ink); font-weight: 500; }
+.hv-list { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid var(--hv-line); }
+.hv-row { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 9px 6px 9px 2px; border-bottom: 1px solid var(--hv-line); font-size: 13px; }
+.hv-row.is-on { background: var(--hv-on); box-shadow: inset 2px 0 0 var(--hv-acc); }
+.hv-rank { font: 500 13px/1 var(--font-mono); color: var(--hv-mut); text-align: right; }
+.hv-who { display: grid; min-width: 0; } .hv-who b { font-weight: 500; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hv-who small { font-size: 13px; color: var(--hv-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.hv-risk { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 99px; font-size: 13px; font-weight: 500; white-space: nowrap; justify-self: end; }
+.hv-risk--low { background: var(--rk-low-bg); color: var(--rk-low-fg); } .hv-risk--elevated { background: var(--rk-el-bg); color: var(--rk-el-fg); }
+.hv-risk--high { background: var(--rk-hi-bg); color: var(--rk-hi-fg); } .hv-risk--insufficient { background: var(--rk-in-bg); color: var(--rk-in-fg); }
+.hv-ico { flex: none; }
+.hv-sim { display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: 5px; font: 500 13px/1 var(--font-mono); letter-spacing: 0; color: var(--hv-mut); box-shadow: inset 0 0 0 1px var(--hv-line); flex: none; }
+.hv-card { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 0 0 1px rgb(0 0 0 / .07), 0 18px 44px -20px rgb(0 0 0 / .45); }
+.hv-card__row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hv-card__row b { font-weight: 500; font-size: 14px; }
+.hv-line { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-size: 13px; border-top: 1px solid var(--hv-line); color: var(--hv-ink); }
+.hv-line > i { width: 18px; height: 18px; border-radius: 50%; flex: none; display: grid; place-items: center; background: var(--rk-low-bg); color: var(--rk-low-fg); font-style: normal; font-size: 13px; font-weight: 500; }
+.hv-line > i.is-wait { background: var(--rk-in-bg); color: var(--rk-in-fg); }
+.hv-line b { font-weight: 500; }
+.hv-line .hv-state { margin-left: auto; color: var(--hv-mut); }
+/* hero */
+.hero__art > .ly-piece--note { left: var(--s-6); bottom: var(--s-6); width: 300px; z-index: 2; }
+.hero__art > .hv-win .hv-main { padding-right: var(--ly-cut-room); }
+.hero__proof { font-size: var(--t-small); color: var(--muted); }
+.hero__art .hv-row { grid-template-columns: 22px minmax(0, 1fr) auto; }
+@media (max-width: 639px) { .hero__art .hv-head, .hero__art .hv-tabs { display: none; } .hero__art .hv-row:nth-child(n+4) { display: none; } .hero__art .hv-list { border-top: 0; } }
+@media (max-width: 1023px) { .hero__art > .ly-piece--note { left: var(--s-4); bottom: var(--s-4); width: 270px; } }
+/* app frame in the dark band */
+.app.hv { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); border: 1px solid var(--hv-line); border-radius: var(--r-lg); box-shadow: 0 24px 60px -28px rgb(0 0 0 / .6); }
+.app > .app__pane { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+.app > .app__pane + .app__pane { border-left: 1px solid var(--hv-line); }
+.app > .app__pane::after { content: ""; position: absolute; inset: auto 0 0 0; height: 64px; background: linear-gradient(transparent, var(--hv-bg)); pointer-events: none; }
+.app .hv-main { padding: 16px 18px 0; }
+.hv-open { padding: 16px 20px 0; display: grid; gap: 4px; align-content: start; }
+.hv-open__head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; padding-bottom: 8px; }
+.hv-open__name { display: grid; } .hv-open__name b { font: 500 18px/1.25 var(--font-text); } .hv-open__name small { font-size: 13px; color: var(--hv-mut); }
+.hv-open__tags { display: flex; align-items: center; gap: 8px; }
+.hv-chart { display: grid; grid-template-columns: 132px minmax(0, 1fr); align-items: center; gap: 16px; padding: 8px 0; border-top: 1px solid var(--hv-line); }
+.hv-chart__k { display: grid; } .hv-chart__k span { font-size: 13px; color: var(--hv-mut); } .hv-chart__k b { font: 500 22px/1.2 var(--font-text); font-variant-numeric: tabular-nums; } .hv-chart__k b small, .hv-chart__k > small { font-size: 13px; font-weight: 400; color: var(--hv-mut); }
+.hv-spark { width: 100%; height: 52px; display: block; } .hv-spark--a { color: var(--hv-ink); } .hv-spark--b { color: var(--hv-acc); }
+.hv-axis { stroke: var(--hv-line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.hv-obs { display: grid; gap: 4px; padding-top: 10px; border-top: 1px solid var(--hv-line); font-size: 13px; }
+.hv-obs__k { color: var(--hv-mut); } .hv-obs p { margin: 0; color: var(--hv-ink); } .hv-obs b { font: 500 13px/1 var(--font-mono); margin-right: 6px; }
+@media (min-width: 1024px) and (max-width: 1279px) { .app.hv { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); } .hv-who small .hv-sim { display: none; } }
+@media (max-width: 1023px) {
+  .app.hv { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .app > .app__pane--list { max-height: 252px; } .app > .app__pane--list::after { display: none; }
+  .app > .app__pane + .app__pane { border-left: 0; border-top: 1px solid var(--hv-line); }
+}
+@media (max-width: 639px) {
+  .app.hv { grid-template-rows: minmax(0, 1fr); } .app > .app__pane--list { display: none; }
+  .app > .app__pane + .app__pane { border-top: 0; }
+  .hv-chart { grid-template-columns: 96px minmax(0, 1fr); gap: 10px; } .hv-open { padding: 14px 14px 0; }
+  .hv-obs p:nth-of-type(n+3) { display: none; }
+}
+/* setup: the pairing mock */
+.hv-pair { width: min(100%, 420px); padding: 18px 20px 20px; display: grid; gap: 14px; }
+.hv-pair .hv-tabs { padding: 3px; background: var(--hv-fill); border-radius: 10px; display: grid; grid-template-columns: 1fr 1fr; } .hv-pair .hv-tabs span { text-align: center; padding: 6px 8px; border-radius: 8px; }
+.hv-pair .hv-tabs span.is-on { background: var(--hv-bg); box-shadow: 0 0 0 1px var(--hv-line); }
+.hv-field { display: grid; gap: 4px; } .hv-field > span { font-size: 13px; color: var(--hv-mut); } .hv-field > b { font-weight: 500; font-size: 14px; padding: 9px 12px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--hv-line); }
+.hv-code { font: 500 30px/1 var(--font-mono); letter-spacing: .06em; padding: 14px 16px; border-radius: 10px; background: var(--hv-fill); text-align: center; color: var(--hv-ink); }
+.hv-check { display: grid; }
+/* ask: the question in one lit frame, the plain summary in the other */
+.hv-askgrid { margin-top: var(--s-7); }
+.hv-askgrid .frame--lit { --ratio: 0; padding: var(--s-7); }
+.hv-askgrid .ui-chat { --chat-body: 120px; width: min(100%, 460px); box-shadow: 0 0 0 1px rgb(0 0 0 / .07), 0 18px 44px -20px rgb(0 0 0 / .45); }
+.hv-sum { width: min(100%, 360px); padding: 14px 16px 16px; display: grid; gap: 6px; }
+.hv-sum .hv-line:first-of-type { border-top: 0; } .hv-sum p { margin: 0; font-size: 13px; color: var(--hv-mut); }
+@media (max-width: 1023px) { .hv-askgrid .frame--lit { padding: var(--s-5); } }
+@media (max-width: 639px) { .hv-askgrid .frame--lit:last-child { display: none; } .hv-askgrid .frame--lit { padding: var(--s-4); } }
+#setup .frame--lit { --ratio: 0; padding: var(--s-8); }
+@media (max-width: 639px) { #setup .frame--lit { padding: var(--s-4); } .hv-code { font-size: 24px; } }
+#process .frame--fill, #limits .frame--fill { min-height: 0; }
+#process .frame--fill > img, #limits .frame--fill > img { object-position: var(--pos, 50% 50%); }
+.hv-rec { margin-top: var(--s-6); display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-2); }
+.hv-rec .t-small { color: var(--ink); font-weight: 500; }
+#decision .mo-lt__type { max-width: 11ch; }
+/* the dealt grounds centre a section's content; every section here is top-aligned (layout-v4.md section 2) */
+main > section#setup.section, main > section#limits.section { align-content: start; padding-top: var(--padt); padding-bottom: calc(var(--padb) + var(--bar)); }
+#decision p { margin-top: var(--s-6); max-width: 46ch; }
+#limits .photos { display: grid; grid-template-columns: minmax(0, 1fr); grid-auto-rows: minmax(0, 1fr); gap: var(--s-6); align-self: stretch; }
+#limits .photos .frame { height: 100%; min-height: 200px; }
+@media (max-width: 639px) { #limits .photos { gap: var(--s-4); } #decision .mo-lt__type { font-size: 20vw; max-width: 7ch; line-height: 1; } }
+@media (max-width: 767px) { main > section#setup.section, main > section#limits.section { min-height: calc(var(--hm, 1) * 100lvh); } }
+</style>
+</head>
+<body>
+<!-- type: software
+     deal: hero collage, nav nav-centre, close close-type, footer footer-statement, rhythm dark-band, buttons tonal, mark dots, ground sky,
+           grounds (backgrounds pick): process plain, batches dark, setup bg-halo, ask plain, statement plain, limits bg-band; effect fluted-glass in the hero art
+     moments: liquid-type in #decision (a person always reviews and decides: the headline answers the pointer), marquee-row in #process (what each batch records: a slow row, pause button)
+     motion: hero entrance (the h1 arrives, then what to do), liquid-type in #decision (the one claim a reader should not skim), marquee-row (the kept records scroll by), hover layer on every link and button
+     stand-in photographs (never the client's): f184771770 warehouse racks, f88984490 red crates of tomatoes, f133818202 hand holding tomatoes -->
+<header class="nav nav--centre">
+  <div class="wrap nav__bar">
+    <a class="skip-link" href="#top">Skip to content</a>
+    <a class="nav__logo" href="#top"><span class="mark" data-mark="dots" aria-hidden="true"></span>harvest.</a>
+    <nav class="nav__links" aria-label="Main">
+      <div class="nav__item"><a class="nav__link" href="#process">Process</a></div>
+      <div class="nav__item"><a class="nav__link" href="#batches">Batches</a></div>
+      <div class="nav__item"><a class="nav__link" href="#setup">Setup</a></div>
+      <div class="nav__item"><a class="nav__link" href="#ask">Answers</a></div>
+      <div class="nav__item"><a class="nav__link" href="#limits">Limits</a></div>
+    </nav>
+    <div class="nav__actions">
+      <a class="nav__link" href="/signup">Create an account</a>
+      <a class="btn btn--primary" href="/login">Sign in</a>
+    </div>
+    <button class="nav__toggle" type="button" aria-expanded="false" aria-label="Menu">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 5h14M2 13h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <p><a class="link" href="index.html">Harvest</a></p>
+  <section class="credits-list" id="credits" aria-labelledby="credits-h">
+    <h1 id="credits-h">Photograph credits</h1>
+    <ul>
+      <li><a href="https://commons.wikimedia.org/wiki/File:APHIS-Aircraft_and_Equipment_Operations_(AEO),_Aircraft_Operations_and_Warehouse_(20230622-CDP-APHIS-1121).jpg">USDAgov</a>, <a href="https://creativecommons.org/publicdomain/mark/1.0/">Public domain</a></li>
+      <li><a href="https://commons.wikimedia.org/wiki/File:Tomatos_ready_for_dispatch.jpg">Phadke09</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a></li>
+      <li><a href="https://commons.wikimedia.org/wiki/File:Ripe_tomatoes.jpg">Geems04</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0">CC BY-SA 4.0</a></li>
+    </ul>
+  </section>
+</main>
+
+<footer class="footer footer--statement closing" id="contact" aria-labelledby="close-h">
+  <div class="wrap">
+    <div class="closing__cta close--type">
+      <div class="section-head">
+        <h2 id="close-h">Your batches, ranked for inspection</h2>
+        <p>Sign in to see them, or <a class="link" href="/signup">Create an account</a>.</p>
+      </div>
+      <a class="btn btn--primary btn--xl btn--wide" href="/login">Sign in<svg class="m-arrow" viewBox="0 0 12 12" aria-hidden="true"><path class="m-arrow__stem" d="M1 6h8"/><path class="m-arrow__head" d="M4.5 2.5 8 6l-3.5 3.5"/></svg></a>
+    </div>
+    <div class="closing__links">
+      <div class="grid">
+        <div class="span-6 stack-4">
+          <a class="nav__logo" href="#top"><span class="mark" data-mark="dots" aria-hidden="true"></span>harvest.</a>
+          <p class="footer__lede">Produce monitoring for warehouses and farms.</p>
+        </div>
+        <div class="span-3 start-7 footer__col"><h3>Page</h3><ul><li><a href="#process">Process</a></li><li><a href="#batches">Batches</a></li><li><a href="#setup">Setup</a></li></ul></div>
+        <div class="span-3 footer__col"><h3>More</h3><ul><li><a href="#ask">Answers</a></li><li><a href="#limits">Limits</a></li></ul></div>
+      </div>
+      <div class="footer__legal">
+        <span>&copy; 2026 harvest.</span>
+        <a class="credits" href="credits.html">Photographs via Wikimedia Commons</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="assets/system.js"></script>
+<script type="module" src="assets/motion/motion.js"></script>
+<script type="module" src="assets/layout/layout.js"></script>
+</body>
+</html>

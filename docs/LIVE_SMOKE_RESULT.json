@@ -1,0 +1,24 @@
+{
+  "checks": {
+    "neon_connectivity": {
+      "status": "failed",
+      "category": "dns_unavailable",
+      "error_type": "OperationalError",
+      "status_code": null
+    },
+    "gemini_embedding": {
+      "status": "failed",
+      "category": "dns_unavailable",
+      "error_type": "ConnectError",
+      "status_code": null
+    },
+    "gemini_explanation": {
+      "status": "failed",
+      "category": "dns_unavailable",
+      "error_type": "ConnectError",
+      "status_code": null
+    }
+  },
+  "test_data": "synthetic only",
+  "status": "failed"
+}

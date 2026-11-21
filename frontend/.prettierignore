@@ -1,0 +1,9 @@
+node_modules
+dist
+.agents
+.impeccable
+test-results
+playwright-report
+package-lock.json
+skills-lock.json
+src/api/types.ts
