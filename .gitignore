@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!frontend/.env.production
 .venv/
 __pycache__/
 *.py[cod]
@@ -28,3 +29,8 @@ frontend/.impeccable/
 .kiro/skills/design-taste-frontend/
 .taste-skill/
 frontend/.taste-skill/
+
+
+# Private device settings backups (hold Wi-Fi passwords and device tokens)
+sketch_oct15a/config.h.bak
+*.h.bak

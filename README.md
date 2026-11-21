@@ -249,6 +249,29 @@ devices, and records the administrator as actor. `--once` performs one cycle;
 `--interval-seconds` configures cadence. Explicit assessment requests also work.
 Use one monitoring runner per warehouse; there is no distributed scheduling leader.
 
+## Deployment (Render API, Vercel frontend)
+
+| Part | Where | Notes |
+| --- | --- | --- |
+| API | `https://postharvest-k5r3.onrender.com` | Render web service, root directory `backend` |
+| Frontend | `https://postharvest-kappa.vercel.app` | Vercel project, root directory `frontend` |
+
+Render service:
+
+- Build command: `pip install -r requirements.lock`
+- Start command: `python -m uvicorn app.main:create_app --factory --host 0.0.0.0 --port $PORT`
+- Health check path: `/ready`
+- Environment: `PYTHON_VERSION=3.12.8`, `ENVIRONMENT=production`, `DATABASE_URL` (pooled
+  Neon URL with `sslmode=require`), `JWT_SECRET` (new random value, 32+ characters),
+  `CORS_ORIGINS=["https://postharvest-kappa.vercel.app"]`, optional `GEMINI_API_KEY`.
+- Run migrations from your own machine against the direct (non-pooled) Neon URL, not from Render.
+- The monitor, explanation worker and `scripts.live_feed` are separate processes; the web
+  service runs only the API.
+
+Vercel project: `frontend/.env.production` sets `VITE_API_BASE_URL` to the API above at
+build time, and `frontend/vercel.json` sends `/` to the landing page and every other path
+to the single-page app so deep links such as `/login` work.
+
 ## Authentication and roles
 
 `POST /api/v1/auth/login` takes JSON `{"user_id": "...", "password": "..."}` and

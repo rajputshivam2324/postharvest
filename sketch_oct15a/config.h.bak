@@ -1,9 +1,0 @@
-#pragma once
-// Private local configuration. Do not commit or share.
-static const char* WIFI_SSID = "Excitel_Hare Krishna";
-static const char* WIFI_PASSWORD = "nikhilharsh";
-static const char* SERVER_URL = "http://192.168.1.11:8000/api/v1/readings";
-static const char* SERVER_HEALTH_URL = "http://192.168.1.11:8000/health";
-static const char* DEVICE_ID = "79d17bcd-35b8-4701-96a6-b4b5e022cd51";
-static const char* BATCH_ID = "476f49c6-fbde-4ea2-8179-d581181ce6e8";
-static const char* DEVICE_TOKEN = "C_BrOVbDHChlIUIPyZQ0TjS6Py5ypNM8sCdK93f-wYU";
