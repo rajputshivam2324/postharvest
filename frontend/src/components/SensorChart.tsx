@@ -12,6 +12,15 @@ import {
 import type { AssessmentOut, ObservationOut, ReadingOut } from '../api/types';
 import { Empty } from './ui';
 
+/**
+ * Temperature axis: always show 5 to 40 °C so a cold night near 10 °C is on the chart, and
+ * widen in steps of 5 if a reading falls outside that. (An auto domain zooms in on the data,
+ * which makes a flat 25.6 °C line look like a large swing.)
+ */
+export function temperatureDomain(low: number, high: number): [number, number] {
+  return [Math.min(5, Math.floor(low / 5) * 5), Math.max(40, Math.ceil(high / 5) * 5)];
+}
+
 const colors = ['#28644c', '#b85432', '#416c9d', '#876195', '#7e7518'];
 export default function SensorChart({
   readings,
@@ -80,7 +89,12 @@ export default function SensorChart({
             <YAxis
               unit={` ${unit}`}
               width={70}
-              domain={['auto', 'auto']}
+              domain={
+                metric === 'temperature_c'
+                  ? ([low, high]: readonly [number, number]) => temperatureDomain(low, high)
+                  : ['auto', 'auto']
+              }
+              allowDecimals={metric !== 'temperature_c'}
               tick={{ fill: '#596458', fontSize: 12 }}
             />
             <Tooltip
