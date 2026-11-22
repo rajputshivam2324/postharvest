@@ -6,9 +6,17 @@ MQ ADC input on GPIO 34. Keep the board and backend computer on the same LAN.
 Start the backend with `--host 0.0.0.0 --port 8000`.
 
 Private settings are in ignored `config.h`. For another board, copy
-`config.example.h` to `config.h` and configure the LAN URL, Wi-Fi, registered
-real-device ID, associated batch ID and one-time device credential. Do not share
-`config.h` or compiled firmware containing its credentials.
+`config.example.h` to `config.h` and configure the backend URLs, Wi-Fi, registered
+real-device ID and one-time device credential. There is no batch ID: the server uses
+the batch the device is currently assigned to, so moving a board to another batch is
+done in the app. Do not share `config.h` or compiled firmware containing its credentials.
+
+Firmware `tomato-box-pilot-v2-https` can talk to a hosted backend. An `https://`
+`SERVER_URL` is verified against the root certificates embedded in the sketch
+(`ROOT_CA`: Google Trust Services GTS Root R4 and ISRG Root X1); plain `http://` still
+works for a LAN backend. The board waits for NTP time first because certificate dates
+are checked. If the host changes certificate authority, replace `ROOT_CA`. Certificate
+verification is never turned off.
 
 The sketch sends authenticated `/api/v1/readings` requests, NTP UTC timestamps,
 stable event IDs for network retries and the voltage at the ESP32 ADC input
@@ -49,3 +57,9 @@ The board at `192.168.1.9` received HTTP 201 from the backend at `192.168.1.11`.
 Database verification found four stored real readings; the latest at that check
 was 27.4 °C, 59.7% RH, gas ADC 602 and ADC-pin voltage 0.640 V, timestamped
 `2026-10-29T12:55:53Z`, with `simulated: false` and `warming_up: true`.
+
+Verified on 2026-11-22: compiled with `arduino-cli` (esp32 core 3.3.12, 80% flash, 15% RAM)
+and flashed over USB to `/dev/ttyUSB0` with flash hash verification. Against the deployed
+backend (`https://postharvest-k5r3.onrender.com`) the health check returned 200 and the
+first real reading returned 201; the reading appeared in batch `ESP32-LIVE-TEST-1` through
+the API and on the deployed frontend, stored as `simulated: false`, `warming_up: true`.

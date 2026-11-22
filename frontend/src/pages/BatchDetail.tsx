@@ -208,7 +208,22 @@ export function BatchDetail() {
     'temperature_c',
   );
   const batch = useResource<BatchOut>(`/batches/${id}`);
-  const readings = useList<ReadingOut>(`/batches/${id}/readings`, offset, range, 200);
+  // Live view: follow the newest readings. The API lists oldest first, so a one-row probe
+  // gives the total and the real query then asks for the last page. A fixed window (the old
+  // behaviour) would hide every reading that arrives after the page was opened.
+  const [live, setLive] = useState(true);
+  const liveProbe = useList<ReadingOut>(`/batches/${id}/readings`, 0, {}, 1, live);
+  const liveTotal = liveProbe.data?.total ?? 0;
+  const liveReadings = useList<ReadingOut>(
+    `/batches/${id}/readings`,
+    Math.max(0, liveTotal - 200),
+    {},
+    200,
+    live && liveProbe.isSuccess,
+  );
+  const rangeReadings = useList<ReadingOut>(`/batches/${id}/readings`, offset, range, 200, !live);
+  const readings = live ? liveReadings : rangeReadings;
+  const readingsQuery = live && liveProbe.isError ? liveProbe : readings;
   const observations = useList<ObservationOut>(`/batches/${id}/observations`, observationOffset);
   const assessments = useList<AssessmentOut>(`/batches/${id}/assessments`, assessmentOffset);
   const decisions = useList<DecisionOut>(`/batches/${id}/decisions`, decisionOffset);
@@ -233,6 +248,7 @@ export function BatchDetail() {
     setRangeError('');
     setRange({ start: start.toISOString(), end: end.toISOString() });
     setOffset(0);
+    setLive(false);
   }
   return (
     <>
@@ -372,9 +388,19 @@ export function BatchDetail() {
                   <button className="button secondary" onClick={applyRange}>
                     Apply range
                   </button>
+                  {!live && (
+                    <button className="button secondary" onClick={() => setLive(true)}>
+                      Show latest
+                    </button>
+                  )}
                 </div>
+                <p className="muted">
+                  {live
+                    ? `Showing the latest ${Math.min(liveTotal, 200)} of ${liveTotal} readings. Updates every minute.`
+                    : 'Showing the chosen time range. Choose "Show latest" to follow new readings.'}
+                </p>
                 {rangeError && <Notice danger>{rangeError}</Notice>}
-                <QueryState query={readings}>
+                <QueryState query={readingsQuery}>
                   <Suspense fallback={<div className="loading">Loading chart…</div>}>
                     <SensorChart
                       readings={readings.data?.items || []}
@@ -426,12 +452,14 @@ export function BatchDetail() {
                     </div>
                   </details>
                 </QueryState>
-                <Pagination
-                  limit={200}
-                  total={readings.data?.total || 0}
-                  offset={offset}
-                  onChange={setOffset}
-                />
+                {!live && (
+                  <Pagination
+                    limit={200}
+                    total={readings.data?.total || 0}
+                    offset={offset}
+                    onChange={setOffset}
+                  />
+                )}
               </section>
             )}
             {tab === 'assessment' && (

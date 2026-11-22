@@ -17,6 +17,7 @@ export function useList<T>(
   offset = 0,
   filters: Record<string, string | boolean | undefined> = {},
   limit = 12,
+  enabled = true,
 ) {
-  return useResource<Page<T>>(`${path}${params({ ...filters, limit, offset })}`);
+  return useResource<Page<T>>(`${path}${params({ ...filters, limit, offset })}`, enabled);
 }

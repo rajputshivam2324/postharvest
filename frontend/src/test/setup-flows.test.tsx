@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from '../App';
 import { AuthProvider } from '../auth';
-import type { BatchOut, ChatResponse, DeviceOut } from '../api/types';
+import type { BatchOut, ChatResponse, DeviceOut, ReadingOut } from '../api/types';
 
 const NOW = new Date().toISOString();
 const batch = (id: string, identifier: string, extra: Partial<BatchOut> = {}): BatchOut => ({
@@ -439,5 +439,53 @@ describe('Devices', () => {
       expect(within(card).queryByRole('button', { name })).not.toBeInTheDocument();
     }
     expect(screen.queryByRole('button', { name: 'Pair an ESP32' })).not.toBeInTheDocument();
+  });
+});
+
+describe('Sensor history follows new readings', () => {
+  const reading = (n: number): ReadingOut => ({
+    id: `r${n}`,
+    device_id: 'd1234567-aaaa',
+    batch_id: 'b1',
+    event_id: `e${n}`,
+    temperature_c: 20 + n / 10,
+    humidity_pct: 50,
+    gas_adc: 600,
+    gas_voltage_v: 0.6,
+    warming_up: true,
+    simulated: false,
+    firmware_version: 'fw',
+    source_timestamp: NOW,
+    ingested_at: NOW,
+  });
+
+  it('asks for the newest page, with no fixed end time, so later readings are not hidden', async () => {
+    const calls = fakeApi('operator', {
+      'GET /batches?': () => page([batch('b1', 'tomato-1')]),
+      'GET /batches/b1': (call) =>
+        call.path === '/batches/b1' ? batch('b1', 'tomato-1') : page([]),
+      'GET /batches/b1/readings/latest': () => null,
+      'GET /batches/b1/readings': (call) => {
+        const offset = Number(new URL(call.path, 'http://x').searchParams.get('offset'));
+        // 450 readings exist; the newest page starts at offset 250.
+        return {
+          items: offset === 250 ? [reading(449)] : [reading(0)],
+          total: 450,
+          limit: 200,
+          offset,
+        };
+      },
+    });
+    const user = await signIn('Batches');
+    await user.click(await screen.findByRole('link', { name: /Inspect/ }));
+    await screen.findByRole('heading', { name: 'tomato-1' });
+    // The newest reading (24.9 C comes from reading 449 -> 20 + 44.9 = 64.9) is on screen.
+    expect(await screen.findByText('64.9')).toBeInTheDocument();
+    expect(screen.getByText(/Showing the latest 200 of 450 readings/)).toBeInTheDocument();
+    const asked = calls
+      .filter((c) => c.path.startsWith('/batches/b1/readings?'))
+      .map((c) => new URL(c.path, 'http://x').searchParams);
+    expect(asked.some((q) => q.get('offset') === '250' && q.get('limit') === '200')).toBe(true);
+    expect(asked.every((q) => !q.has('end'))).toBe(true);
   });
 });
