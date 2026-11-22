@@ -27,6 +27,19 @@ export function temperatureDomain(low: number, high: number): [number, number] {
   return [Math.min(5, Math.floor(low / 5) * 5), Math.max(40, Math.ceil(high / 5) * 5)];
 }
 
+/** Clock time for a short range; day and month as well once the range spans more than 36 hours. */
+export function timeLabel(value: number, spanMs: number): string {
+  const when = new Date(value);
+  return spanMs > 36 * 3600000
+    ? when.toLocaleString([], {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
 const colors = ['#28644c', '#b85432', '#416c9d', '#876195', '#7e7518'];
 export default function SensorChart({
   readings,
@@ -88,10 +101,8 @@ export default function SensorChart({
               type="number"
               scale="time"
               domain={min === max ? [min - 60000, max + 60000] : [min, max]}
-              tickFormatter={(value) =>
-                new Date(value).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              }
-              minTickGap={45}
+              tickFormatter={(value) => timeLabel(value, max - min)}
+              minTickGap={max - min > 36 * 3600000 ? 70 : 45}
               tick={{ fill: '#596458', fontSize: 12 }}
             />
             <YAxis
