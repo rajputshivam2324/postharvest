@@ -163,6 +163,23 @@ class ReadingOut(OutputSchema):
     ingested_at: datetime
 
 
+class ReadingPoint(OutputSchema):
+    """One plotted point: a single reading, or the average of the readings in one time bucket."""
+
+    device_id: str
+    source_timestamp: datetime
+    temperature_c: float
+    humidity_pct: float
+    gas_adc: int
+    samples: int
+
+
+class ReadingSeries(OutputSchema):
+    points: list[ReadingPoint]
+    total: int  # readings in the range
+    bucket_seconds: int  # 0 when every reading is its own point
+
+
 class IngestionOut(InputSchema):
     reading: ReadingOut
     duplicate: bool

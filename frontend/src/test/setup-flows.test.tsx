@@ -488,4 +488,54 @@ describe('Sensor history follows new readings', () => {
     expect(asked.some((q) => q.get('offset') === '250' && q.get('limit') === '200')).toBe(true);
     expect(asked.every((q) => !q.has('end'))).toBe(true);
   });
+
+  it('draws a chosen range from the whole-range summary, not just the first page', async () => {
+    const calls = fakeApi('operator', {
+      'GET /batches?': () => page([batch('b1', 'tomato-1')]),
+      'GET /batches/b1': (call) =>
+        call.path === '/batches/b1' ? batch('b1', 'tomato-1') : page([]),
+      'GET /batches/b1/readings/latest': () => null,
+      'GET /batches/b1/readings/series': () => ({
+        points: [
+          {
+            device_id: 'd1234567-aaaa',
+            source_timestamp: '2026-11-15T08:20:00Z',
+            temperature_c: 12.5,
+            humidity_pct: 90,
+            gas_adc: 600,
+            samples: 4,
+          },
+          {
+            device_id: 'd1234567-aaaa',
+            source_timestamp: '2026-11-21T08:20:00Z',
+            temperature_c: 27.5,
+            humidity_pct: 45,
+            gas_adc: 640,
+            samples: 4,
+          },
+        ],
+        total: 1728,
+        bucket_seconds: 1500,
+      }),
+      'GET /batches/b1/readings': () => ({
+        items: [reading(0)],
+        total: 1728,
+        limit: 200,
+        offset: 0,
+      }),
+    });
+    const user = await signIn('Batches');
+    await user.click(await screen.findByRole('link', { name: /Inspect/ }));
+    await screen.findByRole('heading', { name: 'tomato-1' });
+    await user.click(await screen.findByRole('button', { name: 'Apply range' }));
+    expect(
+      await screen.findByText(/1728 readings averaged into 25-minute buckets/),
+    ).toBeInTheDocument();
+    const asked = calls.filter((c) => c.path.startsWith('/batches/b1/readings/series'));
+    expect(asked.length).toBeGreaterThan(0);
+    const q = new URL(asked.at(-1)!.path, 'http://x').searchParams;
+    expect(q.get('max_points')).toBe('500');
+    expect(q.has('start') && q.has('end')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Show latest' })).toBeInTheDocument();
+  });
 });

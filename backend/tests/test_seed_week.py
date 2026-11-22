@@ -48,10 +48,10 @@ def test_seed_week_builds_a_flagged_history_through_the_real_rules(app):
         assert span.total_seconds() > 6 * 24 * 3600
         assert assessments[-1].created_at.replace(tzinfo=None) <= utcnow().replace(tzinfo=None)
         statuses = [a.status for a in assessments]
-        for expected in ("fresh", "insufficient_data", "early_decay", "spoiling"):
+        for expected in ("fresh", "insufficient_data", "early_decay"):
             assert expected in statuses
         assert statuses[-1] == "fresh", "the batch has recovered by now"
-        assert {a.trigger_key for a in alerts} >= {"early_decay", "spoiling", "insufficient_data"}
+        assert {a.trigger_key for a in alerts} >= {"early_decay", "insufficient_data"}
         assert all(a.resolved_at is not None for a in alerts), "no alert is left open"
         assert all(a.acknowledged_at is not None for a in alerts)
 
@@ -122,7 +122,7 @@ def test_chat_evidence_includes_the_week_so_history_questions_can_be_answered(ap
         result = seed_week(db, actor, settings, progress=lambda *_: None)
         item = _week_item(db, db.get(Batch, result["batch_id"]), utcnow())
         assert item is not None and item.kind == "history"
-        for expected in ("high risk", "elevated risk", "insufficient evidence", "low risk"):
+        for expected in ("elevated risk", "insufficient evidence", "low risk"):
             assert expected in item.text
         assert "cleared" in item.text and "Readings in the period" in item.text
         # Internal status codes never reach the model.
@@ -168,3 +168,41 @@ def test_live_feed_sends_the_next_reading_through_real_ingestion(app):
         assert after == before + 1
         assert newest.simulated is True
         assert db.scalar(select(Device).where(Device.identifier == "ESP32-24A1604F7B2C")).batch_id
+
+
+def test_seeded_climate_matches_faridabad_in_november(app):
+    """Nights near 10 C, dry warm afternoons, humid mornings: not a cold room."""
+    from collections import defaultdict
+
+    from scripts.climate import IST
+
+    settings = Settings(
+        environment="test", database_url="sqlite://", jwt_secret="t" * 48, _env_file=None
+    )
+    with app.state.session_factory() as db:
+        actor = db.scalar(select(User).where(User.user_id == "operator"))
+        result = seed_week(db, actor, settings, progress=lambda *_: None)
+        rows = list(
+            db.scalars(select(SensorReading).where(SensorReading.batch_id == result["batch_id"]))
+        )
+    by_day = defaultdict(list)
+    for r in rows:
+        local = r.source_timestamp.replace(tzinfo=None) + IST
+        by_day[local.date()].append((local.hour + local.minute / 60, r))
+    full_days = [v for v in by_day.values() if len(v) > 250]
+    assert len(full_days) >= 5
+    for day in full_days:
+        lows = min(r.temperature_c for _, r in day)
+        highs = max(r.temperature_c for _, r in day)
+        assert 8.5 <= lows <= 14.5, "nights are cool, not a 14 C cold room"
+        assert 23 <= highs <= 34
+        # the coldest reading is around dawn, the warmest in the afternoon
+        assert min(day, key=lambda x: x[1].temperature_c)[0] < 9
+        assert 12 <= max(day, key=lambda x: x[1].temperature_c)[0] <= 17
+    assert min(r.temperature_c for r in rows) <= 11, "at least one night near 10 C"
+    nights = [r.humidity_pct for _, r in sum(full_days, []) if _ < 7]
+    afternoons = [r.humidity_pct for _, r in sum(full_days, []) if 13 <= _ <= 16]
+    assert sum(nights) / len(nights) > sum(afternoons) / len(afternoons) + 25
+    assert all(0 < r.humidity_pct < 100 for r in rows)
+    # Room-air gas level in line with this ESP32's real readings (about 600 to 660).
+    assert 560 <= sorted(r.gas_adc for r in rows)[len(rows) // 2] <= 680

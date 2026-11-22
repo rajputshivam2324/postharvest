@@ -11,6 +11,7 @@ import type {
   DeviceOut,
   ObservationOut,
   ReadingOut,
+  ReadingSeries,
 } from '../api/types';
 import {
   Badge,
@@ -224,6 +225,21 @@ export function BatchDetail() {
   const rangeReadings = useList<ReadingOut>(`/batches/${id}/readings`, offset, range, 200, !live);
   const readings = live ? liveReadings : rangeReadings;
   const readingsQuery = live && liveProbe.isError ? liveProbe : readings;
+  // The table pages 200 readings at a time; the chart must cover the whole chosen range, so it
+  // uses a server-side summary (averaged into time buckets when the range is long).
+  const rangeSeries = useResource<ReadingSeries>(
+    `/batches/${id}/readings/series${params({ ...range, max_points: 500 })}`,
+    !live,
+  );
+  const chartPoints = live ? (liveReadings.data?.items ?? []) : (rangeSeries.data?.points ?? []);
+  const series = rangeSeries.data;
+  const chartNote = live
+    ? 'The chart shows the latest 200 readings.'
+    : series
+      ? series.bucket_seconds > 0
+        ? `The chart covers the whole range: ${series.total} readings averaged into ${Math.round(series.bucket_seconds / 60)}-minute buckets. The table below lists individual readings, ${200} per page.`
+        : `The chart covers the whole range: all ${series.total} readings.`
+      : '';
   const observations = useList<ObservationOut>(`/batches/${id}/observations`, observationOffset);
   const assessments = useList<AssessmentOut>(`/batches/${id}/assessments`, assessmentOffset);
   const decisions = useList<DecisionOut>(`/batches/${id}/decisions`, decisionOffset);
@@ -401,9 +417,13 @@ export function BatchDetail() {
                 </p>
                 {rangeError && <Notice danger>{rangeError}</Notice>}
                 <QueryState query={readingsQuery}>
+                  {!live && rangeSeries.isError && (
+                    <Notice danger>The chart for this range could not be loaded.</Notice>
+                  )}
                   <Suspense fallback={<div className="loading">Loading chart…</div>}>
                     <SensorChart
-                      readings={readings.data?.items || []}
+                      readings={chartPoints}
+                      note={chartNote}
                       observations={observations.data?.items || []}
                       assessments={assessments.data?.items || []}
                       metric={metric}

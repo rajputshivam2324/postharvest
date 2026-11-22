@@ -1,4 +1,7 @@
-from datetime import datetime
+import math
+from collections import defaultdict
+from datetime import UTC, datetime
+from typing import Any
 
 from sqlalchemy import Select, select
 from sqlalchemy.orm import Session
@@ -7,6 +10,7 @@ from app.core.errors import DomainError
 from app.db.models import Batch, Device, DeviceAssignment, SensorReading, User
 from app.repositories.common import accessible_batches, paginate
 from app.schemas.common import Page, Pagination
+from app.schemas.resources import ReadingPoint, ReadingSeries
 
 
 def device_visibility(user: User) -> Select[tuple[str]] | None:
@@ -51,3 +55,82 @@ def reading_history(
     if end:
         query = query.where(SensorReading.source_timestamp <= end)
     return paginate(db, query.order_by(SensorReading.source_timestamp, SensorReading.id), page)
+
+
+SERIES_MAX_ROWS = 50_000  # about 170 days of five-minute readings
+
+
+def reading_series(
+    db: Session,
+    batch_id: str,
+    start: datetime | None,
+    end: datetime | None,
+    max_points: int,
+) -> ReadingSeries:
+    """The whole range as at most about ``max_points`` points per device, for charts.
+
+    Paging 200 readings at a time is right for a table but wrong for a chart: a week would
+    show only its first 17 hours. When the range holds more readings than ``max_points``
+    they are averaged into equal time buckets (per device), so a week is drawn as a week.
+    """
+    query = select(
+        SensorReading.device_id,
+        SensorReading.source_timestamp,
+        SensorReading.temperature_c,
+        SensorReading.humidity_pct,
+        SensorReading.gas_adc,
+    ).where(SensorReading.batch_id == batch_id)
+    if start:
+        query = query.where(SensorReading.source_timestamp >= start)
+    if end:
+        query = query.where(SensorReading.source_timestamp <= end)
+    rows = db.execute(
+        query.order_by(SensorReading.source_timestamp, SensorReading.id).limit(SERIES_MAX_ROWS + 1)
+    ).all()
+    if len(rows) > SERIES_MAX_ROWS:
+        raise DomainError(422, "range_too_large", "Choose a shorter time range")
+    total = len(rows)
+
+    def aware(value: datetime) -> datetime:
+        return value.replace(tzinfo=UTC) if value.tzinfo is None else value
+
+    if total <= max_points:
+        return ReadingSeries(
+            points=[
+                ReadingPoint(
+                    device_id=r.device_id,
+                    source_timestamp=aware(r.source_timestamp),
+                    temperature_c=r.temperature_c,
+                    humidity_pct=r.humidity_pct,
+                    gas_adc=r.gas_adc,
+                    samples=1,
+                )
+                for r in rows
+            ],
+            total=total,
+            bucket_seconds=0,
+        )
+    first = aware(rows[0].source_timestamp).timestamp()
+    last = aware(rows[-1].source_timestamp).timestamp()
+    bucket = max(60, math.ceil((last - first) / max_points / 60) * 60)
+    groups: dict[tuple[str, int], list[Any]] = defaultdict(list)
+    for r in rows:
+        groups[
+            (r.device_id, int((aware(r.source_timestamp).timestamp() - first) // bucket))
+        ].append(r)
+    points = []
+    for (device_id, _), items in groups.items():
+        n = len(items)
+        mean_time = sum(aware(i.source_timestamp).timestamp() for i in items) / n
+        points.append(
+            ReadingPoint(
+                device_id=device_id,
+                source_timestamp=datetime.fromtimestamp(mean_time, UTC),
+                temperature_c=round(sum(i.temperature_c for i in items) / n, 1),
+                humidity_pct=round(sum(i.humidity_pct for i in items) / n, 1),
+                gas_adc=round(sum(i.gas_adc for i in items) / n),
+                samples=n,
+            )
+        )
+    points.sort(key=lambda p: (p.source_timestamp, p.device_id))
+    return ReadingSeries(points=points, total=total, bucket_seconds=bucket)

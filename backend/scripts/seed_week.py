@@ -19,7 +19,7 @@ import random
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -37,15 +37,15 @@ from app.services.resources import (
     record_observation,
     register_device,
 )
+from scripts.climate import IST, box_conditions
 
 STEP = timedelta(minutes=5)
 FIRMWARE = "1.4.2"
-BASELINE_GAS = 520
+BASELINE_GAS = 590  # clean-air reference, in line with this board's room-air readings
 
-# (start hour, minutes open, peak temperature rise in C): someone opens the cold room door.
-DOOR_EVENTS = [(31.0, 25, 2.4), (77.5, 35, 3.1), (126.0, 20, 1.8), (150.2, 30, 2.6)]
-FAULT_START_H, FAULT_END_H = 100.0, 111.0  # the cooling unit trips, then is restored
 GAP_START_H, GAP_MINUTES = 60.0, 40  # the sensor loses Wi-Fi and reboots
+SUN_LOCAL_START, SUN_MINUTES, SUN_PEAK_RISE = (13, 0), 270, 6.5  # direct sun on the box
+SUN_DAY_INDEX = 4  # which local day, counted from the first one in the plan
 
 
 @dataclass
@@ -61,6 +61,16 @@ def hours(plan: Plan, when: datetime) -> float:
     return (when - plan.start).total_seconds() / 3600
 
 
+def sun_window(plan: Plan) -> tuple[datetime, datetime]:
+    """Early on day 5, afternoon sun comes through the window onto the box for a few hours."""
+    first_local_day = (plan.start + IST).date()
+    local = datetime.combine(
+        first_local_day + timedelta(days=SUN_DAY_INDEX), datetime.min.time()
+    ) + timedelta(hours=SUN_LOCAL_START[0], minutes=SUN_LOCAL_START[1])
+    begin = local.replace(tzinfo=UTC) - IST
+    return begin, begin + timedelta(minutes=SUN_MINUTES)
+
+
 def in_gap(h: float) -> bool:
     return GAP_START_H <= h < GAP_START_H + GAP_MINUTES / 60
 
@@ -70,38 +80,18 @@ def warming_up(h: float, index: int) -> bool:
     return index < 12 or after_gap <= h < after_gap + 0.5
 
 
-def door_rise(h: float) -> float:
-    rise = 0.0
-    for start, minutes, peak in DOOR_EVENTS:
-        end = start + minutes / 60
-        if start <= h < end:
-            rise += peak * (1 - math.exp(-(h - start) * 60 / 8))
-        elif h >= end:
-            at_end = peak * (1 - math.exp(-minutes / 8))
-            rise += at_end * math.exp(-(h - end) * 60 / 12)
-    return rise
-
-
-def fault_shape(h: float) -> float:
-    """0..1: how far the cooling fault has pushed conditions at hour h."""
-    if FAULT_START_H <= h < FAULT_END_H:
-        return 1 - math.exp(-(h - FAULT_START_H) / 3.0)
-    if h >= FAULT_END_H:
-        return (1 - math.exp(-(FAULT_END_H - FAULT_START_H) / 3.0)) * math.exp(
-            -(h - FAULT_END_H) / 2.2
-        )
-    return 0.0
-
-
-def gas_after_fault(h: float) -> float:
-    if FAULT_START_H <= h < FAULT_END_H:
-        return 330 * (1 - math.exp(-(h - FAULT_START_H) / 5.0))
-    if h >= FAULT_END_H:
-        return (
-            330
-            * (1 - math.exp(-(FAULT_END_H - FAULT_START_H) / 5.0))
-            * math.exp(-(h - FAULT_END_H) / 18.0)
-        )
+def sun_shape(plan: Plan, tick: datetime) -> float:
+    """0..1: how much direct sun is on the box. Ramps up over 40 minutes, holds, fades out."""
+    begin, end = sun_window(plan)
+    ramp = timedelta(minutes=40)
+    if begin <= tick < begin + ramp:
+        return (tick - begin) / ramp
+    if begin + ramp <= tick < end - ramp:
+        return 1.0
+    if end - ramp <= tick < end:
+        return (end - tick) / ramp
+    if end <= tick < end + timedelta(minutes=90):  # the shelf stays warm for a while
+        return 0.25 * math.exp(-(tick - end).total_seconds() / 2400)
     return 0.0
 
 
@@ -110,10 +100,28 @@ def sample(plan: Plan, index: int) -> tuple[datetime, float, float, int, bool]:
     rng = random.Random(f"{plan.seed}:{index}")
     tick = plan.start + index * STEP
     h = index * STEP.total_seconds() / 3600
-    daily = math.sin(2 * math.pi * (h - 9) / 24)
-    temperature = 14.2 + 0.9 * daily + door_rise(h) + 13.5 * fault_shape(h) + rng.gauss(0, 0.12)
-    humidity = 88.0 - 1.2 * daily - 1.1 * door_rise(h) - 26.0 * fault_shape(h) + rng.gauss(0, 0.5)
-    gas = BASELINE_GAS + 2 + 0.35 * h + gas_after_fault(h) + rng.gauss(0, 4)
+    temperature, humidity = box_conditions(tick, plan.seed)
+    # Slow drifts from clouds, people and air currents, on top of the daily cycle.
+    phases = random.Random(f"{plan.seed}:phase")
+    phase1, phase2 = phases.uniform(0, 6.28), phases.uniform(0, 6.28)
+    minutes = index * 5
+    temperature += 0.22 * math.sin(2 * math.pi * minutes / 53 + phase1)
+    temperature += 0.15 * math.sin(2 * math.pi * minutes / 131 + phase2)
+    humidity += 0.8 * math.sin(2 * math.pi * minutes / 71 + phase1)
+    sun = sun_shape(plan, tick)
+    temperature += SUN_PEAK_RISE * sun
+    humidity -= 14 * sun
+    temperature += rng.gauss(0, 0.07)
+    humidity += rng.gauss(0, 0.35)
+    gas = (
+        BASELINE_GAS
+        + 6
+        + 0.30 * h
+        + 1.6 * (temperature - 20)
+        + 0.35 * (humidity - 50)
+        + 90 * sun
+        + rng.gauss(0, 5)
+    )
     warm = warming_up(h, index)
     if warm:
         gas += 60 * math.exp(-(index % 12) / 4) + rng.gauss(0, 10)
@@ -129,15 +137,19 @@ def sample(plan: Plan, index: int) -> tuple[datetime, float, float, int, bool]:
 
 
 def schedule(plan: Plan, end_hours: float) -> list[float]:
-    """Hours at which the monitor assesses the batch: every 3 h, hourly through the fault."""
+    """Hours at which the monitor assesses the batch: every 3 h, hourly around the sun spell."""
     times = {float(h) for h in range(9, int(end_hours) + 1, 3)}
-    times |= {float(h) for h in range(int(FAULT_START_H) + 1, int(FAULT_END_H) + 24)}
+    begin, end = sun_window(plan)
+    first, last = hours(plan, begin), hours(plan, end)
+    times |= {float(h) for h in range(int(first) - 1, int(last) + 22)}
     gap_end = GAP_START_H + GAP_MINUTES / 60
-    times |= {gap_end + 0.25, gap_end + 0.75, GAP_START_H + 0.5, FAULT_START_H + 0.5}
-    return sorted(t for t in times if t <= end_hours)
+    times |= {gap_end + 0.25, gap_end + 0.75, GAP_START_H + 0.5, first + 0.5}
+    return sorted(t for t in times if 9 <= t <= end_hours)
 
 
 def observations(plan: Plan) -> list[tuple[float, dict[str, Any]]]:
+    begin, end = sun_window(plan)
+    sun_start, sun_end = hours(plan, begin), hours(plan, end)
     return [
         (
             0.2,
@@ -147,7 +159,7 @@ def observations(plan: Plan) -> list[tuple[float, dict[str, Any]]]:
                 "firmness": "firm",
                 "visible_mould": False,
                 "weight_kg": 18.0,
-                "notes": "Box placed on rack B2, sensor clipped to the inside wall.",
+                "notes": "Box placed on a shelf in the storage room, sensor clipped inside it.",
             },
         ),
         (
@@ -169,23 +181,23 @@ def observations(plan: Plan) -> list[tuple[float, dict[str, Any]]]:
             },
         ),
         (
-            107.0,
+            sun_start + 2.7,
             {
-                "condition": "Cold room alarm: cooling unit tripped, room warm to the touch",
-                "notes": "Box moved to rack C while the unit is restarted.",
+                "condition": "Afternoon sun came through the window onto the box",
+                "notes": "Box moved to the shaded end of the shelf.",
             },
         ),
         (
-            113.5,
+            sun_end + 20.0,
             {
-                "condition": "Top layer slightly soft after the warm spell",
+                "condition": "Top layer slightly soft after the warm afternoon",
                 "firmness": "slightly soft",
                 "visible_mould": False,
                 "weight_kg": 17.6,
             },
         ),
         (
-            144.0,
+            sun_end + 44.0,
             {
                 "condition": "Colour even, firmness normal again",
                 "firmness": "firm",
@@ -205,17 +217,19 @@ def observations(plan: Plan) -> list[tuple[float, dict[str, Any]]]:
 
 
 def decisions(plan: Plan) -> list[tuple[float, str, str]]:
+    _, end = sun_window(plan)
+    after = hours(plan, end)
     return [
         (
-            113.8,
+            after + 20.3,
             "inspection",
-            "Inspected after the temperature excursion. Top layer slightly soft, no visible "
-            "mould. Keep monitoring.",
+            "Inspected after the warm afternoon. Top layer slightly soft, no visible mould. "
+            "Keep monitoring.",
         ),
         (
-            114.5,
+            after + 21.0,
             "annotation",
-            "Cooling restored. Box stays on rack C with extra checks for the next 24 hours.",
+            "Box stays at the shaded end of the shelf with an extra check each morning.",
         ),
     ]
 
@@ -250,7 +264,7 @@ def seed_week(
     identifier: str = "TOMATO-BOX-PILOT-3",
     device_identifier: str = "ESP32-24A1604F7B2C",
     days: int = 7,
-    seed: int = 20261121,
+    seed: int = 579,
     owner_id: str | None = None,
     end: datetime | None = None,
     commit: Callable[[], None] | None = None,
@@ -272,9 +286,12 @@ def seed_week(
                 commodity="tomato",
                 quantity=18,
                 unit="kg",
-                storage_location="Cold room 1, rack B2",
-                notes="Roma tomatoes from the morning delivery, one box, sensor inside.",
-                attributes={"simulated": True, "scenario": "week-v1", "seed": seed},
+                storage_location="Storage room, Sector 7, Faridabad",
+                notes=(
+                    "Roma tomatoes from the morning delivery, one box on a shelf in an "
+                    "unheated room, sensor inside."
+                ),
+                attributes={"simulated": True, "scenario": "week-v2-faridabad", "seed": seed},
                 owner_id=owner_id,
             ),
             actor,

@@ -1542,6 +1542,100 @@
         }
       }
     },
+    "/api/v1/batches/{batch_id}/readings/series": {
+      "get": {
+        "tags": [
+          "monitoring"
+        ],
+        "summary": "Readings Series",
+        "description": "Chart data for the whole range, averaged into time buckets when it is long.",
+        "operationId": "readings_series_api_v1_batches__batch_id__readings_series_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "batch_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Batch Id"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Start"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "End"
+            }
+          },
+          {
+            "name": "max_points",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 50,
+              "default": 500,
+              "title": "Max Points"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadingSeries"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/batches/{batch_id}/readings/latest": {
       "get": {
         "tags": [
@@ -5285,6 +5379,72 @@
           "ingested_at"
         ],
         "title": "ReadingOut"
+      },
+      "ReadingPoint": {
+        "properties": {
+          "device_id": {
+            "type": "string",
+            "title": "Device Id"
+          },
+          "source_timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Source Timestamp"
+          },
+          "temperature_c": {
+            "type": "number",
+            "title": "Temperature C"
+          },
+          "humidity_pct": {
+            "type": "number",
+            "title": "Humidity Pct"
+          },
+          "gas_adc": {
+            "type": "integer",
+            "title": "Gas Adc"
+          },
+          "samples": {
+            "type": "integer",
+            "title": "Samples"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_id",
+          "source_timestamp",
+          "temperature_c",
+          "humidity_pct",
+          "gas_adc",
+          "samples"
+        ],
+        "title": "ReadingPoint",
+        "description": "One plotted point: a single reading, or the average of the readings in one time bucket."
+      },
+      "ReadingSeries": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/ReadingPoint"
+            },
+            "type": "array",
+            "title": "Points"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "bucket_seconds": {
+            "type": "integer",
+            "title": "Bucket Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "points",
+          "total",
+          "bucket_seconds"
+        ],
+        "title": "ReadingSeries"
       },
       "SignupInput": {
         "properties": {

@@ -10,6 +10,12 @@ import {
   YAxis,
 } from 'recharts';
 import type { AssessmentOut, ObservationOut, ReadingOut } from '../api/types';
+
+/** What the chart needs from a reading: a single reading or an averaged point both fit. */
+export type ChartReading = Pick<
+  ReadingOut,
+  'device_id' | 'source_timestamp' | 'temperature_c' | 'humidity_pct' | 'gas_adc'
+>;
 import { Empty } from './ui';
 
 /**
@@ -27,8 +33,10 @@ export default function SensorChart({
   observations,
   assessments,
   metric,
+  note,
 }: {
-  readings: ReadingOut[];
+  readings: ChartReading[];
+  note?: string;
   observations: ObservationOut[];
   assessments: AssessmentOut[];
   metric: 'temperature_c' | 'humidity_pct' | 'gas_adc';
@@ -129,9 +137,8 @@ export default function SensorChart({
         </ResponsiveContainer>
       </div>
       <p className="panel-footnote">
-        Chart covers this reading page only. Dashed markers show observations and assessments within
-        its time span (up to 20). Device series are separate. Gas values are raw ADC counts,
-        uncalibrated.
+        {note} Dashed markers show observations and assessments within the chart's time span (up to
+        20). Device series are separate. Gas values are raw ADC counts, uncalibrated.
       </p>
     </>
   );

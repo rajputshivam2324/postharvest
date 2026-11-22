@@ -22,7 +22,12 @@ from app.db.models import (
 )
 from app.db.session import get_db, get_settings
 from app.repositories.common import accessible_batches, flush, paginate, require_batch
-from app.repositories.monitoring import device_visibility, reading_history, require_device
+from app.repositories.monitoring import (
+    device_visibility,
+    reading_history,
+    reading_series,
+    require_device,
+)
 from app.schemas.common import Page, Pagination
 from app.schemas.pairing import DevicePairingOut, PairingOut
 from app.schemas.resources import (
@@ -41,6 +46,7 @@ from app.schemas.resources import (
     ObservationCreate,
     ObservationOut,
     ReadingOut,
+    ReadingSeries,
     RiskStatus,
     VendorOut,
 )
@@ -334,6 +340,21 @@ def readings(
     require_batch(db, batch_id, user)
     validate_time_range(start, end)
     return reading_history(db, batch_id, page, start, end)
+
+
+@router.get("/batches/{batch_id}/readings/series", response_model=ReadingSeries)
+def readings_series(
+    batch_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+    start: Annotated[AwareDatetime | None, Query()] = None,
+    end: Annotated[AwareDatetime | None, Query()] = None,
+    max_points: Annotated[int, Query(ge=50, le=1000)] = 500,
+) -> ReadingSeries:
+    """Chart data for the whole range, averaged into time buckets when it is long."""
+    require_batch(db, batch_id, user)
+    validate_time_range(start, end)
+    return reading_series(db, batch_id, start, end, max_points)
 
 
 @router.get("/batches/{batch_id}/readings/latest", response_model=ReadingOut | None)

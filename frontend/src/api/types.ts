@@ -402,6 +402,19 @@ export interface ReadingOut {
   source_timestamp: string;
   ingested_at: string;
 }
+export interface ReadingPoint {
+  device_id: string;
+  source_timestamp: string;
+  temperature_c: number;
+  humidity_pct: number;
+  gas_adc: number;
+  samples: number;
+}
+export interface ReadingSeries {
+  points: Array<ReadingPoint>;
+  total: number;
+  bucket_seconds: number;
+}
 export interface SignupInput {
   user_id: string;
   password: string;
